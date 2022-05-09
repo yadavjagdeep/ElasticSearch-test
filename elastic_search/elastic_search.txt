@@ -1,0 +1,75 @@
+"At its core, you can think of Elasticsearch as a server that can process JSON requests and give you back JSON data."
+
+
+'''ElasticSearch  Topics'''
+
+Cluster and Node:
+
+When we are staring an elasticsearch instance, we are starting a node. An Elasticsearch cluster is a group
+of nodes that have same cluster name. As node joins and leaves the cluster, the cluster automatically 
+recognizes itself to evenly distribute data accross the available nodes.
+
+# nodes are added to a cluster to increase its capability and reliability
+
+=> Cluster and Node: https://www.elastic.co/guide/en/elasticsearch/reference/current/add-elasticsearch-nodes.html
+
+Index:
+
+Index is similar to a table in relational database which store documents having a perticular schema
+in JSON format
+
+Documents:
+
+These are basically records in an index just like a row in relational database. Each document has a JSON 
+format, a unique _id assosited to it and pertains to a specific mapping.
+
+Fields:
+
+These are basically attributes of a document just like coloumns in relational database.
+
+=> url: https://medium.com/expedia-group-tech/getting-started-with-elastic-search-6af62d7df8dd
+
+
+Shards:
+
+ElasticSearch splits the documents in the index across multiple nodes in the cluster. Each and every split
+of the document is called a shard. Each node carrying a shard will have only a subset of document.
+Suppose we have 100 document with 5 shard then each shard will have 20 doc each. This sharding of data
+is what makes low latency search possible in elasticsearch
+
+
+Replica:
+
+Search is conducted parallel on multiple nodes. Results are aggregated and returned. However the shards does
+not provide fault tolerance, meaning if anynode containing a shard is down, the cluster health becomes
+yellow, which implies some data is not available.
+
+To increase the fault tolerance replicas comes into picture. By default elastic search create a single 
+replica of each shard. These replicas are always created on a node where primary shard is not residing.
+
+
+=> Shards and Replica url: https://stackoverflow.com/questions/15694724/shards-and-replicas-in-elasticsearch
+
+Mapping Type:
+
+To create different types in an index we need mapping types(or simply mapping) to be specified during
+index creation. Mappings can be defined as a list of a directives given to elasticsearch about how data 
+is supposed to be stored and retrived. It is important to provide mapping information at the of index 
+creation based on how we want to retrive our data later
+
+Alias:
+
+Alias is used to group a number of index under a single name
+Alis are basically created to group a set of indices and make them accessible regarless the name they have,
+it is apointer to a set of indices, we can apply a query/condition to all these indies, it is very useful 
+when performing a queries or creating a dashboard over the same group of indices
+
+=> Alias url: https://stackoverflow.com/questions/48907041/what-are-aliases-in-elasticsearch-for
+
+
+
+#### some imp links ####
+
+https://medium.com/velotio-perspectives/elasticsearch-101-fundamentals-core-components-a1fdc6090a5e
+https://www.knowi.com/blog/what-is-elastic-search/
+https://medium.com/@animeshblog/elasticsearch-the-beginners-cookbook-1cf30f98218

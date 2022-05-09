@@ -1,0 +1,199 @@
+'''Elasticsearch_Dsl'''
+
+ElasticSearch provides a powerful set of options for querying documents for various usecases
+
+The queries covered here will fall into 2 types:
+
+$: Structured Queries: queries that are used to retrive structured data such as dates, numbers,pin codes etc.
+
+$: Full text Queries: queries that are used to query plain text
+
+
+"---------------Sample document---------------------------"
+{"_index": "employees", "type":"employee", "_id": "1"}
+{
+    "name": "Jagdeep Yadav",
+    "age": 24,
+    "salary": "20lpa",
+    "hobby": [
+        "cricket",
+        "books",
+        "websearch"
+    ],
+    "phrase": "Never trust anyone, but try to be nice with people"
+}
+
+{"_index": "employees", "type":"employee", "_id": "2"}
+{
+    "name": "Arnav Yadav",
+    "age": 22,
+    "salary": "40lpa",
+    "hobby": [
+        "cricket",
+        "girls",
+        "websearch"
+    ],
+    "phrase": "Mind your own bissness, I don't trust any one"
+}
+
+{"_index": "employees", "type":"employee", "_id": "3"}
+{
+    "name": "Zishan Khan",
+    "age": 23,
+    "salary": "15lpa",
+    "hobby": [
+        "cricket",
+        "girls",
+        "sex"
+    ],
+    "phrase": "I Mind your own bissness"
+}
+
+"------------------------------------------------------------"
+
+1: Match Query:
+
+The "match" query is one of the most basic and commonly used queries in elasticsearch and functions 
+as full text query. We can use this query to search for text, number or boolean values.
+
+e.g: searh word yadav in field name in documents in index employees
+
+POST employees/_search
+{
+    "query":{
+        "match":{
+            "name":{
+                "query": "yadav"
+            }
+        }
+    }
+}
+
+=> This query returns all the documents in which name keyword contains the word "yadav", it does
+not matters if it is in upper case or lower case
+
+
+POST employees/_search
+{
+    "query":{
+        "match":{
+            "name":{
+                "query": "Jagdeep yadav",
+                # "operator": "AND",
+                # "minimum_should_match", 2
+            }
+        }
+    }
+}
+
+=> This query will return all the documents that have word either "jagdeep" or "yadav" or both in "name"
+keyword
+
+=> By default it treats each word as unique and there is "OR" operator between them, we can explicitly
+pass operator, can pass "operator": "AND" to match exactly "Jagdeep yadav" in above query
+
+
+$ minimum_should_match:
+We can set a threshod for minimum amount of matching words the document must contain
+
+
+1.1: Multi-Match Query:
+So far we have been dealing with matches on a single field, i.e, we have searched for keywords inside
+a single field "name".
+We can search for the keywords in multiple fields of the document using 'multi_match' query 
+
+
+POST employees/_search
+{
+    "query":{
+        "multi_match":{
+                "query": "Jagdeep yadav bissness",
+                "fields": [
+                    "name",
+                    "phrase"
+                ]
+        }
+    }
+}   
+
+1.2: Match Phrase:
+Match_phrase is another commonly used query, like it's name indicate it matches phrases in a field.
+
+POST employees/_search
+{
+    "query":{
+        "match_phrase":{
+            "phrase": {
+                "query": "your own bissness"
+            }
+        }
+    }
+}
+
+1.3: Match Phrase Prefix:
+
+The match_phrase_prefix query is similar to the match_phrase query, but here the last term of the 
+search keyword is considered as a prefix and is used to match any term starting with that prefix term.
+
+2: Term Level Queries:
+
+Term level queries ate used to query structured data, which would usually be exact values.
+
+=> term query searches for the exact match of the search keyword against the field in the document
+
+e.g: if we seach for keyword "15lpa" against salary field in the above index, we will get the document
+in which 'salary' field have value "15lpa" exactly, it is case sensitive
+
+POST employees/_search
+{
+    "query":{
+        "term": {
+            "salary": "15lpa"
+        }
+    }
+}
+
+=> we can pass multiple terms using terms query
+
+POST employees/_search
+{
+    "query":{
+        "terms": {
+            "salary": ["15lpa"
+            ,"20lpa"
+            ]
+        }
+    }
+}
+
+
+2.1: Exists Query:
+
+Sometime it happens that there is no indexed value for a field, or field does not exhits in the document,
+In such cases, exists query helps in identifying such documents
+
+e.g: as in the employee index we don't have any document that have company as a field
+=> TO list all documents that have company name field
+GET employees/_search
+{
+    "query": {
+        "exhists": {
+            "field": "company"
+        }
+    }
+}
+
+The above query will list all documents which have field "company"
+=> To list all documents without the "company" field
+GET employees/_search
+{
+    "query": {
+        "bool": {
+            "must_not":{
+        "exhists": {
+            "field": "company"
+            }
+        }
+    }
+}
+}
