@@ -201,7 +201,7 @@ GET employees/_search
 }
 
 
-                "<------------------------2.2 Range Queries ------------------------------->
+                "<------------------------2.2 Range Queries ------------------------------->"
 
 The Range queries allows us to get the document that contains the terms within an specified range.
 Range is a term level query and can be used against numerical fields, data fields etc.
@@ -376,4 +376,7 @@ we need to find all documents which have either "yadav" in their name or age gre
 
 ############################### Refrence ###########################################
 
-url: https://coralogix.com/blog/42-elasticsearch-query-examples-hands-on-tutorial/
+url:
+https://coralogix.com/blog/42-elasticsearch-query-examples-hands-on-tutorial/
+https://user3141592.medium.com/understanding-the-elasticsearch-query-dsl-ce1d67f1aa5b
+https://www.tutorialspoint.com/elasticsearch/elasticsearch_query_dsl.htm
