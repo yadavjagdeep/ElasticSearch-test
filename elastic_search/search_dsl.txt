@@ -1,0 +1,145 @@
+                                '''The Search object'''
+
+The API is designed to be chainable. That means search object is immutable-all changes to the object will result
+in a shallow copy being created which contains the changes. This means that we can pass search object safely
+to foreign code without fear of it modifying your code
+
+
+* The API is chainable, allowing us to combine multiple method calls in one statement:
+
+client = Elasticsearch()
+
+s = Search(using=client)
+
+s = Search().using(client).query("match", "name"="yadav")
+
+To send request to elasticsearch
+resp = s.execute()
+
+=> Search results are cached. Subsequent calls to execute or trying to iterate over an already executed 
+seach will not trigger additional requests being sent to elastic search. To force a request we need to
+specify 'ignore_cache=True' when calling execute
+
+* we can serialize search object to dict explicitly
+-> s.to_dict()
+
+# Delete by query
+
+We can delete a document matching a search by calling delete on the Search object insted of execute
+-> s = Search(index='i').query("match", "name":"yadav")
+-> resp = s.delete()
+
+# Queries
+
+The library provides classes for all Elasticsearch query types, pass all the parameters as keyward arguments.
+The classes accept any keyword argument, dsl then takes all arguments passed to the constractor and serialize
+them to top-level keys in the resulting dictionary and thus resulting json being sent to elasticsearch.
+
+* This simply means that there is a clear one-to-one mapping between the raw query and it's equivalent in the
+DSL.
+
+e.g:
+        {"multi_match":{"query":"jagdeep yadav", "fields": ["name", "salary"]}}
+        ->  MultiMatch(query='jagdeep yadav', fields=['name', 'salary'])
+
+        {"match":{"name":{"query":"Zishan"}}}
+        -> Match(name='Zishan')
+
+* We can use Q short-cut to construct the instance using a name with parameters or the raw dict
+
+q = Q("multi_match", query="jagdeep yadav", fields=['name', 'phrase'])
+-> or q = Q({"multi_match":{"query":"jagdeep yadav", "fields":['name', 'phrase']}}})
+
+=> TO add the query to Search object add it to .query() method
+
+* Dotted fields
+Sometimes we need to refer to fields inside a structured data like json doc like address.city.
+To make it eaiser, the Q shortcut (as well as the query, filter, and exclude method o Search class) allows
+us to use __ in place of dot in a keyward argument
+
+e.g: s = Search()
+s = s.filter('term', address__city='noida')
+
+-> Alternatively we can also use python kwargs unpacking
+
+    s = s.filter('term', **{'address.city': 'noida'})
+
+# Query Combination
+
+* Query object can be combined using logical operator
+
+--> must
+    {"bool":{"must":[{"match":{"name"='jagdeep'}},{"match":{"name"='Zishan'}}]}}
+    Q("match", name='jagdeep') & Q("match", name="Zishan")
+
+--> should
+    {"bool":{"should":[{"match":{"name"='jagdeep'}},{"match":{"name"='Zishan'}}]}}
+    Q("match", name="jagdeep") | Q("match", name=Zishan)
+
+--> must_not
+    {"bool":{"must_not":[{"match":{"name"='jagdeep'}}]}}
+    ~Q("match", name='Arnav')
+
+
+# Filters
+# Query and filter Context
+
+$ query context:
+A query clause is in query context answers the question "How well does a document match this query clause?"
+Besides deciding whether or not document matches, the query clause also calculate a _score representing
+how well the document matches, relative to other document
+
+$ filter context:
+In filter context, a query clause ansawers the question "Does this document match this query clause"
+The answers is simple yes or no -- no score is calculated. Filter context is mostly used for filtering
+structured data
+
+* url: https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-filter-context.html
+
+{
+    "query": { 
+      "bool": { 
+        "must": [
+          { "match": { "title":   "Search"        }}, 
+          { "match": { "content": "Elasticsearch" }}  
+        ],
+        "filter": [ 
+          { "term":  { "status": "published" }}, 
+          { "range": { "publish_date": { "gte": "2015-01-01" }}} 
+        ]
+      }
+    }
+  }
+
+
+=> In the above e.g, term and range cluase are used in filter context. They will filter out all the documents
+which do not match, but they will not affect the score of matching document
+
+s = Search()
+s = s.filter('terms', name=["jagdeep", "Zishan"])
+
+--> Behind the scenes this will produce a Bool query and place the specified terms query into it's filter branch
+
+# exclude
+
+We can exclude items from query using .exclude()
+
+s = Search()
+s = s.exclude('terms', name=['jagdeep', 'Zishan'])
+
+the above statement is shorthand of 
+s = s.query('bool', filter=[~Q('terms', name=['jagdeep', 'Zishan'])])
+
+# pagination
+
+To specify from/size parameters
+s = s[5:20]
+
+# If we need to limit the fields being returned by elasticsearch, can use source() method:
+
+s = s.source(['name', 'age'])
+
+
+                  ##################### Refrence #######################
+
+url: https://github.com/elastic/elasticsearch-dsl-py/blob/master/docs/search_dsl.rst
